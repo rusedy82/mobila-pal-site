@@ -11,7 +11,7 @@ C = {
     "tel_afisat": "0759 324 006",
     "tel_link": "+40759324006",
     "whatsapp": "40759324006",
-    "domeniu": "",                               # gol până avem domeniul
+    "domeniu": "https://mobilapalarad.ro",
 }
 ORAS = "Arad"
 
