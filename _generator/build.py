@@ -97,14 +97,38 @@ b.addEventListener("click",function(){{var o=m.classList.toggle("open");b.setAtt
 m.addEventListener("click",function(e){{if(e.target.tagName==="A"){{m.classList.remove("open");b.setAttribute("aria-expanded","false")}}}});}})();
 </script>'''
 
+# ---------- date structurate (schema.org) ----------
+import json as _json, re as _ld_re
+def ld_tag(obj):
+    s = _json.dumps(obj, ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/")
+    return f'<script type="application/ld+json">{s}</script>\n'
+
+def breadcrumb_ld(path, body):
+    # Se construiește din firimiturile vizibile pe pagină, ca să spună același lucru.
+    m = _ld_re.search(r'<p class="crumbs">(.*?)</p>', body, _ld_re.S)
+    if not m or not C["domeniu"]: return ""
+    crumbs = m.group(1)
+    items = [(html.unescape(t).strip(), C["domeniu"] + "/" + ("" if h == "index.html" else h))
+             for h, t in _ld_re.findall(r'<a href="([^"]+)">(.*?)</a>', crumbs)]
+    last = _ld_re.sub(r"<[^>]+>", "", crumbs[crumbs.rfind("</a>") + 4:]).lstrip(" /›").strip()
+    items.append((html.unescape(last), C["domeniu"] + "/" + path))
+    return ld_tag({"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [
+        {"@type": "ListItem", "position": i, "name": n, "item": u} for i, (n, u) in enumerate(items, 1)]})
+
+def site_ld(business):
+    business = {"@id": C["domeniu"] + "/#firma", "url": C["domeniu"] + "/", **business}
+    return ld_tag({"@context": "https://schema.org", "@graph": [business, {
+        "@type": "WebSite", "@id": C["domeniu"] + "/#site", "url": C["domeniu"] + "/",
+        "name": C["nume"], "inLanguage": "ro", "publisher": {"@id": C["domeniu"] + "/#firma"}}]})
+
 def page(title, desc, path, body):
     # Arad în titlu și descriere: acolo se uită Google pentru căutările locale
     if ORAS not in title: title = title.replace(" | ", f" în {ORAS} | ", 1)
     if ORAS not in desc: desc = desc.rstrip(".") + f". Lucrăm în {ORAS} și împrejurimi."
-    ld = ('<script type="application/ld+json">{"@context":"https://schema.org","@type":"HomeAndConstructionBusiness",'
-          f'"name":"{C["nume"]}","description":"Mobilă la comandă din PAL melaminat și MDF vopsit","telephone":"{C["tel_link"]}",'
-          f'"areaServed":{{"@type":"City","name":"{ORAS}"}},"address":{{"@type":"PostalAddress","addressLocality":"{ORAS}","addressCountry":"RO"}}'
-          + (f',"url":"{C["domeniu"]}/"' if C["domeniu"] else "") + '}</script>\n') if path == "index.html" else ""
+    ld = site_ld({"@type": "HomeAndConstructionBusiness", "name": C["nume"],
+                  "description": "Mobilă la comandă din PAL melaminat și MDF vopsit", "telephone": C["tel_link"],
+                  "areaServed": {"@type": "City", "name": ORAS},
+                  "address": {"@type": "PostalAddress", "addressLocality": ORAS, "addressCountry": "RO"}}) if path == "index.html" else breadcrumb_ld(path, body)
     canon = f'<link rel="canonical" href="{C["domeniu"]}/{"" if path == "index.html" else path}">\n' if C["domeniu"] else ""
     return f'''<!doctype html>
 <html lang="ro">
