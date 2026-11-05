@@ -65,7 +65,7 @@ def logo(light=False):
     a, b = (C["nume"].split(" ", 1) + [""])[:2]
     return f'<span class="logo{" logo-light" if light else ""}">{logo_mark()}<span class="wm"><span class="wm1">{a} <i>{b}</i></span><small>{C["sub"]}</small></span></span>'
 
-PAGES_NAV = [("index.html#pal", "PAL melaminat"), ("index.html#mdf", "MDF vopsit"), ("pal-melaminat-sau-mdf-vopsit.html", "PAL sau MDF?"),
+PAGES_NAV = [("index.html#pal", "PAL melaminat"), ("index.html#mdf", "MDF vopsit"), ("index.html#lucrari", "Lucrări"), ("pal-melaminat-sau-mdf-vopsit.html", "PAL sau MDF?"),
              ("index.html#unde", "Ce facem"), ("index.html#oferta", "Cere ofertă")]
 
 def header():
@@ -260,11 +260,57 @@ FAQ = [
     ("Pot vedea mostre de PAL melaminat și MDF vopsit?", "Da. La măsurători aducem mostre de decoruri de PAL melaminat și de culori pentru MDF vopsit, ca să le vezi în lumina din casa ta."),
 ]
 
+PROIECTE = [
+    dict(titlu="Bucătării din PAL și MDF", sub="Decoruri de marmură, beton și lemn, fețe frezate colorate",
+         poze=[("bucatarie-marmura", "Bucătărie cu fețe negre în decor de marmură, blat și placare asortate", 1520, 990),
+               ("bucatarie-beton-stejar", "Corpuri sus în decor de beton, corpuri jos și placare în decor de stejar", 1600, 1120),
+               ("bucatarie-verde", "Bucătărie cu fețe frezate verzi și decor de stejar", 1200, 1600)]),
+    dict(titlu="Marmură, stejar și detalii", sub="Decoruri combinate și feronerie care se văd de aproape",
+         poze=[("marmura-stejar", "Fețe în decor de marmură albă, încadrate de coloane în decor de stejar, cu LED", 1400, 1490),
+               ("coloana-extractibila", "Coloană extractibilă cu rafturi metalice, lângă cuptoarele încorporabile", 1256, 1500),
+               ("mobilier-marmura", "Mobilier în decor de marmură albă, cu sertare și vitrină", 1270, 900)]),
+    dict(titlu="Dulapuri și comode", sub="Fețe frezate și decoruri de lemn, pe dimensiunile camerei",
+         poze=[("dulap-frezat", "Dulap până la tavan, cu fețe frezate și sertare", 1230, 1015),
+               ("comoda-verde", "Comodă cu fețe frezate verzi și sertare în decor de stejar", 1104, 980)]),
+]
+def galerie(proiecte=PROIECTE):
+    out = ""
+    for pr in proiecte:
+        tiles = ""
+        for i, (f, alt, w, h) in enumerate(pr["poze"]):
+            cls = "ph ph-big" if i == 0 else "ph"
+            tiles += (f'<a class="{cls}" href="lucrari/{f}.jpg" data-cap="{alt}">'
+                      f'<img src="lucrari/{f}-mic.jpg" srcset="lucrari/{f}-mic.jpg 720w, lucrari/{f}.jpg 1600w" '
+                      f'sizes="(min-width:900px) 60vw, 100vw" alt="{pr["titlu"]}: {alt[0].lower() + alt[1:]}" loading="lazy" width="{w}" height="{h}">'
+                      f'<span class="ph-cap">{alt}</span></a>')
+        one = {1: " one", 2: " doi", 3: " trei"}.get(len(pr["poze"]), "")
+        out += f'''<div class="project">
+  <div class="project-head"><h3>{pr["titlu"]}</h3><p>{pr["sub"]}</p></div>
+  <div class="photos{one}">{tiles}</div>
+</div>
+'''
+    return out + f'''<div class="lb" id="lb" hidden><button class="lb-x" type="button" aria-label="Închide">×</button><button class="lb-p" type="button" aria-label="Poza anterioară">‹</button><figure><img alt=""><figcaption></figcaption></figure><button class="lb-n" type="button" aria-label="Poza următoare">›</button></div>
+<script>
+(function(){{
+  var lb=document.getElementById("lb"); if(!lb) return;
+  var links=[].slice.call(document.querySelectorAll(".photos a")), img=lb.querySelector("img"), cap=lb.querySelector("figcaption"), i=0;
+  function show(k){{ i=(k+links.length)%links.length; img.src=links[i].href; img.alt=links[i].querySelector("img").alt; cap.textContent=links[i].dataset.cap; }}
+  function close(){{ lb.hidden=true; document.body.style.overflow=""; }}
+  links.forEach(function(a,k){{ a.addEventListener("click",function(e){{ e.preventDefault(); show(k); lb.hidden=false; document.body.style.overflow="hidden"; lb.querySelector(".lb-x").focus(); }}); }});
+  lb.querySelector(".lb-x").onclick=close; lb.querySelector(".lb-p").onclick=function(){{show(i-1)}}; lb.querySelector(".lb-n").onclick=function(){{show(i+1)}};
+  lb.addEventListener("click",function(e){{ if(e.target===lb||e.target.tagName==="FIGURE") close(); }});
+  document.addEventListener("keydown",function(e){{ if(lb.hidden) return; if(e.key==="Escape") close(); if(e.key==="ArrowLeft") show(i-1); if(e.key==="ArrowRight") show(i+1); }});
+  var x0=null; lb.addEventListener("touchstart",function(e){{x0=e.touches[0].clientX}},{{passive:true}});
+  lb.addEventListener("touchend",function(e){{ if(x0===null) return; var dx=e.changedTouches[0].clientX-x0; if(Math.abs(dx)>40) show(dx<0?i+1:i-1); x0=null; }});
+}})();
+</script>'''
+
+
 def index():
     unde = "".join(f'<div class="ucard"><h3>{kw(s, t)}</h3><p>{d}</p></div>' for s, t, d in UNDE)
     body = f'''
 <div class="hx">
-  <div class="hx-bg" aria-hidden="true"><img src="lucrari/alba-1.jpg" alt="" width="1600" height="1200" fetchpriority="high"></div>
+  <div class="hx-bg" aria-hidden="true"><img src="lucrari/bucatarie-beton-stejar.jpg" alt="" width="1600" height="1120" fetchpriority="high"></div>
   <div class="wrap hx-in">
     <span class="eyebrow pill pill-glass">Mobilă la comandă din PAL melaminat și MDF vopsit</span>
     <h1>Mobilă la comandă din <em>PAL melaminat</em> și <em>MDF vopsit</em></h1>
@@ -311,6 +357,11 @@ def index():
 <section id="compara"><div class="wrap">
   <div class="head"><span class="eyebrow pill">Comparație</span><h2>PAL melaminat sau MDF vopsit?</h2><p>Pe scurt, diferențele dintre cele două materiale. Detalii în {kw("pal-melaminat-sau-mdf-vopsit","comparația completă")}.</p></div>
   {compare_table()}
+</div></section>
+
+<section id="lucrari" class="band"><div class="wrap">
+  <div class="head"><span class="eyebrow pill pill-dark">Lucrări</span><h2>Lucrări din PAL melaminat și MDF vopsit</h2><p>Poze reale de la clienții noștri. Apasă pe o poză ca să o vezi mare.</p></div>
+  {galerie()}
 </div></section>
 
 <section id="unde" class="band"><div class="wrap">
